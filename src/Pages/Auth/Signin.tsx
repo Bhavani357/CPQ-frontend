@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import type { FormProps } from 'antd';
 import { Button, Form, Input, Typography } from 'antd';
-import '../index.css';
-import { BASE_URL } from '../Services/APIs';
+import '../../index.css';
+import BASE_URL from '../../Services/APIs';
 
 type FieldType = {
   email: string;
@@ -14,24 +14,36 @@ type FieldType = {
 const Signin: React.FC = () => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
-  const [loginMessage, setLoginMessage] = useState<string>('');
-  const { Paragraph, Title } = Typography;
+  const [loginErrMessage, setLoginErrMessage] = useState<string>('');
 
+  const { Paragraph, Title } = Typography;
   const navigate = useNavigate();
+  const jwtToken = Cookies.get('jwtToken');
+  useEffect(() => {
+    if (jwtToken) {
+      navigate('/proposals');
+    }
+  }, []);
+
   const onFinish: FormProps<FieldType>['onFinish'] = async (values) => {
     try {
       const response = await axios.post(
         `${BASE_URL}/api/v1/users/login`,
         values,
       );
+      console.log(response);
       const { token } = response.data;
-      Cookies.set('jwtToken', token, { expires: 1 });
-      navigate('/');
+      if (token) {
+        Cookies.set('jwtToken', token, { expires: 7 });
+        navigate('/proposals');
+      }
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        if (err.response) {
-          setLoginMessage(err.response.data);
-        }
+        console.log('loginErrmsg', err);
+        setLoginErrMessage(err.response?.data.message);
+        // if (err.response) {
+        //   setLoginErrMessage(err.response.data);
+        // }
       }
     }
   };
@@ -113,9 +125,11 @@ const Signin: React.FC = () => {
                 </Button>
               </div>
             </Form.Item>
-            {loginMessage && (
+            {loginErrMessage && (
               <Form.Item>
-                <Paragraph className="login-message">{loginMessage}</Paragraph>
+                <Paragraph className="login-message">
+                  {loginErrMessage}
+                </Paragraph>
               </Form.Item>
             )}
           </Form>

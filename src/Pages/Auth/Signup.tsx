@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import type { FormProps } from 'antd';
 import { Button, Form, Input, Typography } from 'antd';
-import '../index.css';
-import { BASE_URL } from '../Services/APIs';
+import '../../index.css';
+// import BASE_URL from '../Services/APIs';
 
 type FieldType = {
   firstname: string;
@@ -24,12 +24,13 @@ const Signup: React.FC = () => {
   const navigate = useNavigate();
   const onFinish: FormProps<FieldType>['onFinish'] = async (values) => {
     try {
-      await axios.post(`${BASE_URL}/api/v1/users`, values);
+      await axios.post('http://localhost:5000/api/v1/users/register', values);
       navigate('/signin');
     } catch (err) {
+      console.log(err);
       if (axios.isAxiosError(err)) {
         if (err.response) {
-          setSignupErr(`${err.response.data.message} with that Email`);
+          setSignupErr(`${err.message}`);
         }
       }
     }
